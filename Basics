@@ -1,0 +1,21 @@
+https://api.ovh.com/console 
+
+# GET YOUR APPLICATION KEY, APPLICATION SECRET, CUSTOMER KEY on https://www.ovh.com/auth/api/createToken
+
+AK="...."
+AS="...."
+CK="...."
+
+# THEN you can get the information of the application:
+GET /me/api/application
+
+METHOD=GET
+QUERY="https://eu.api.ovh.com/1.0/me/api/application"
+BODY=""
+TSTAMP=$(date +%s)
+
+SHA=$(echo -n $AS+$CK+$METHOD+$QUERY+$BODY+$TSTAMP | shasum | cut -d ' ' -f 1)
+SIGNATURE="\$1\$$SHA"
+
+curl -X $METHOD -H "Content-type: application/json" -H "X-Ovh-Application: $AK" -H "X-Ovh-Consumer: $CK" -H "X-Ovh-Signature: $SIGNATURE" -H "X-Ovh-Timestamp: $TSTAMP" $QUERY
+
